@@ -29,7 +29,7 @@ func main() {
 				freeMode = true
 			}
 		}
-		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath(), config.KeysPath(), modelOnly, freeMode); err != nil {
+		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath(), config.KeysPath(), config.AgeKeyPath(), modelOnly, freeMode); err != nil {
 			out.Error(err.Error())
 			os.Exit(1)
 		}
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	// Load config
-	cfg, err := config.LoadFrom(config.DefaultPath())
+	cfg, err := config.Load(config.DefaultPath(), config.KeysPath(), config.AgeKeyPath())
 	if err != nil {
 		out.Error(err.Error())
 		out.Secondary("Run: commodo setup")
@@ -95,7 +95,8 @@ func main() {
 	}
 
 	// Initialize cache
-	cachePath := filepath.Join(os.Getenv("HOME"), ".config", "commodo", "cache.json")
+	home, _ := os.UserHomeDir()
+	cachePath := filepath.Join(home, ".commodo", "cache.json")
 	c := cache.New(cachePath)
 
 	// Compute file hashes for context files
