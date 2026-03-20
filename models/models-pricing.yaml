@@ -2,8 +2,8 @@ providers:
   openai:
     prefix: "openai"
     patterns:
-      - "gpt-*-mini*"
-    default: gpt-4o-mini
+      - "gpt-*-nano*"
+    default: gpt-4o-nano
   anthropic:
     prefix: "anthropic"
     patterns:
