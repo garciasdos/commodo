@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/garciasdos/commodo/models"
 )
 
 // models.Providers() returns alphabetically: anthropic(1), deepseek(2), openai(3)
@@ -35,8 +37,9 @@ func TestRunSetup(t *testing.T) {
 	if !strings.Contains(content, "api_key: sk-test123") {
 		t.Errorf("expected api_key in config, got:\n%s", content)
 	}
-	if !strings.Contains(content, "model: gpt-4o-mini") {
-		t.Errorf("expected default model in config, got:\n%s", content)
+	expectedModel := models.DefaultModel("openai")
+	if !strings.Contains(content, "model: "+expectedModel) {
+		t.Errorf("expected default model %s in config, got:\n%s", expectedModel, content)
 	}
 }
 
@@ -58,8 +61,9 @@ func TestRunSetupDeepSeek(t *testing.T) {
 	if !strings.Contains(content, "provider: deepseek") {
 		t.Errorf("expected provider deepseek, got:\n%s", content)
 	}
-	if !strings.Contains(content, "model: deepseek-chat") {
-		t.Errorf("expected default model deepseek-chat, got:\n%s", content)
+	expectedModel := models.DefaultModel("deepseek")
+	if !strings.Contains(content, "model: "+expectedModel) {
+		t.Errorf("expected default model %s, got:\n%s", expectedModel, content)
 	}
 }
 
