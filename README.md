@@ -5,7 +5,7 @@ Generate conventional commit messages from staged git diffs using an LLM.
 ## Install
 
 ```bash
-go install github.com/dgarcia/commodo@latest
+go install github.com/garciasdos/commodo@latest
 ```
 
 ## Setup
