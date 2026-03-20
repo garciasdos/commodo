@@ -20,6 +20,29 @@ func DefaultPath() string {
 	return filepath.Join(home, ".config", "commodo", "config.yaml")
 }
 
+func KeysPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".config", "commodo", "keys.yaml")
+}
+
+func LoadKeys(path string) map[string]string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return map[string]string{}
+	}
+	keys := map[string]string{}
+	yaml.Unmarshal(data, &keys)
+	return keys
+}
+
+func SaveKeys(path string, keys map[string]string) error {
+	data, err := yaml.Marshal(keys)
+	if err != nil {
+		return fmt.Errorf("cannot marshal keys: %w", err)
+	}
+	return os.WriteFile(path, data, 0600)
+}
+
 func LoadFrom(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

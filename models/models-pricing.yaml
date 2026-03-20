@@ -15,6 +15,7 @@ providers:
             - gpt-*-nano*
         default: gpt-5-nano
     openrouter:
+        # Free model — not managed by update-models (free models have price=0 and are excluded from auto-update)
         prefix: openrouter
         patterns:
             - nvidia/*
