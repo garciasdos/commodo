@@ -1,4 +1,4 @@
-module github.com/dgarcia/commodo
+module github.com/garciasdos/commodo
 
 go 1.25.7
 

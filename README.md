@@ -65,7 +65,7 @@ commodo --version
 ## Contributing
 
 ```bash
-git clone https://github.com/dgarcia/commodo.git
+git clone https://github.com/garciasdos/commodo.git
 cd commodo
 go test ./...
 go build -o commodo .

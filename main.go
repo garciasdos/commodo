@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/dgarcia/commodo/cache"
-	"github.com/dgarcia/commodo/config"
-	"github.com/dgarcia/commodo/git"
-	"github.com/dgarcia/commodo/output"
-	"github.com/dgarcia/commodo/provider"
-	"github.com/dgarcia/commodo/setup"
+	"github.com/garciasdos/commodo/cache"
+	"github.com/garciasdos/commodo/config"
+	"github.com/garciasdos/commodo/git"
+	"github.com/garciasdos/commodo/output"
+	"github.com/garciasdos/commodo/provider"
+	"github.com/garciasdos/commodo/setup"
 )
 
 var version = "dev"

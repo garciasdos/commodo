@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/dgarcia/commodo/prompt"
+	"github.com/garciasdos/commodo/prompt"
 )
 
 type OpenAI struct {
