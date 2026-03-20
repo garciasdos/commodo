@@ -9,7 +9,8 @@ Automated release pipeline for commodo: GitHub Releases with cross-platform bina
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Trigger | GitHub Release UI (`release: published`) | Manual control over when to release |
-| Tag/version | Fully manual, typed in GH UI | Simple, no validation overhead |
+| Tag/version | Fully manual, typed in GH UI | Simple; GoReleaser validates semver `v`-prefix and fails fast on malformed tags |
+| Platforms | linux/darwin only (no Windows) | Matches existing CI matrix; commodo relies on `git` CLI and is primarily used on Unix systems |
 | Build tool | GoReleaser | Industry standard for Go CLIs, handles builds + checksums + Homebrew tap in one config |
 | Homebrew distribution | `garciasdos/homebrew-tap` | Required by Homebrew for third-party formulas |
 | Checksums | SHA256 `checksums.txt` | Standard practice, used by Homebrew formula for verification |
@@ -38,14 +39,17 @@ jobs:
     steps:
       - checkout (with fetch-depth: 0 for goreleaser changelog)
       - setup-go (go-version-file: go.mod)
-      - goreleaser/goreleaser-action (with GITHUB_TOKEN and HOMEBREW_TAP_TOKEN)
+      - go test ./... -race
+      - goreleaser/goreleaser-action@v6 (with GITHUB_TOKEN and HOMEBREW_TAP_TOKEN)
 ```
 
 **Key details:**
 - `fetch-depth: 0` is required so GoReleaser can generate changelogs from git history
+- Tests run before GoReleaser to prevent publishing broken binaries
 - `contents: write` permission to upload release assets
-- `HOMEBREW_TAP_TOKEN` secret (GitHub PAT with `repo` scope) for pushing formula to tap repo
+- `HOMEBREW_TAP_TOKEN` secret (fine-grained PAT scoped to `garciasdos/homebrew-tap` with `Contents: write` permission) for pushing formula to tap repo
 - `GITHUB_TOKEN` is used by GoReleaser to upload assets to the release
+- Actions are pinned to major versions (`goreleaser/goreleaser-action@v6`)
 
 ### GoReleaser Configuration
 
@@ -67,7 +71,7 @@ jobs:
 
 **Changelog:**
 - Auto-generated from commits since last tag
-- Grouped by conventional commit type (feat, fix, chore, etc.)
+- Grouped by conventional commit type using explicit `changelog.groups` filters (feat → Features, fix → Bug Fixes, etc.)
 
 **Brews:**
 - Tap: `garciasdos/homebrew-tap`
@@ -115,14 +119,15 @@ brew install garciasdos/tap/commodo
 |------|--------|---------|
 | `.goreleaser.yaml` | New | GoReleaser configuration |
 | `.github/workflows/release.yml` | New | Release workflow |
+| `.gitignore` | Modified | Add `dist/` (GoReleaser build output directory) |
 
 ## Manual One-Time Setup
 
-1. Create a GitHub PAT (classic) with `repo` scope
+1. Create a fine-grained GitHub PAT scoped to `garciasdos/homebrew-tap` with `Contents: Read and write` permission
 2. Add it as `HOMEBREW_TAP_TOKEN` secret in the `commodo` repo settings (Settings → Secrets → Actions)
 
 ## What Stays Unchanged
 
 - Existing `ci.yml` workflow (vet, test, build matrix for PRs)
-- `main.go` and all Go code
+- `main.go` and all Go code (`var version = "dev"` at line 17 is the ldflags injection target — no code change needed)
 - `update-models.yml` workflow
