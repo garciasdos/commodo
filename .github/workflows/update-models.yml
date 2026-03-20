@@ -1,0 +1,35 @@
+name: Update Default Models
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Every Monday at 9:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-models:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Check for model updates
+        run: go run ./cmd/update-models
+
+      - name: Create PR if models changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: "chore: update default models to cheapest available"
+          body: |
+            Automated weekly update of default models based on OpenRouter pricing.
+
+            This PR was created by the `update-models` workflow.
+          branch: chore/update-default-models
+          commit-message: "chore: update default models"
+          delete-branch: true
