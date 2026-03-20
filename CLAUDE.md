@@ -17,7 +17,7 @@ go vet ./...                   # Lint
 |---------|---------|
 | `main.go` | CLI entry point, subcommand routing |
 | `cache/` | Hash-based project summary cache |
-| `config/` | YAML config loading (~/.config/commodo/config.yaml) and per-provider key store (~/.config/commodo/keys.yaml) |
+| `config/` | YAML config loading (~/.commodo/config.yaml), age-encrypted key store (~/.commodo/keys.yaml.age), and crypto helpers |
 | `git/` | Git CLI wrapper (diff, commit, rev-parse) |
 | `models/` | Embedded provider defaults from `models-pricing.yaml` |
 | `output/` | Colored terminal output (ANSI) |
@@ -37,14 +37,15 @@ go vet ./...                   # Lint
 
 - `commodo setup` — full interactive wizard (provider → API key → model)
 - `commodo setup --model` — skips provider/key, updates model only
-- API keys are persisted per-provider in `keys.yaml`; shown masked as default on re-selection
+- `commodo setup --free` — skips provider/model, configures OpenRouter free tier
+- API keys are age-encrypted and persisted per-provider in `keys.yaml.age`; shown masked as default on re-selection
 
 ## Testing
 
 - Hand-rolled mocks (no assertion libraries)
 - `t.TempDir()` for file-based tests
 - Tests must **not** hardcode model names from `models-pricing.yaml` — use `models.DefaultModel()` dynamically since defaults are updated automatically by CI
-- Setup tests pass both `configPath` and `keysPath` (both in `t.TempDir()`)
+- Setup tests pass `configPath`, `keysPath`, and `ageKeyPath` (all in `t.TempDir()`)
 
 ## CI
 
