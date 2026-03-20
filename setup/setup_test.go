@@ -10,7 +10,7 @@ import (
 	"github.com/garciasdos/commodo/models"
 )
 
-// models.Providers() returns alphabetically: anthropic(1), deepseek(2), openai(3)
+// models.Providers() returns alphabetically: anthropic(1), deepseek(2), openai(3), openrouter(4)
 
 func TestRunSetup(t *testing.T) {
 	dir := t.TempDir()
@@ -94,8 +94,8 @@ func TestRunSetupInvalidProvider(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
-	// Invalid choice "5", then valid "1" (anthropic)
-	input := strings.NewReader("5\n1\nsk-test\n\n")
+	// Invalid choice "6", then valid "1" (anthropic)
+	input := strings.NewReader("6\n1\nsk-test\n\n")
 	var out bytes.Buffer
 
 	err := Run(input, &out, configPath)

@@ -35,7 +35,7 @@ func LoadFrom(path string) (*Config, error) {
 		return nil, fmt.Errorf("config: provider is required")
 	}
 	if !models.ValidProviders()[cfg.Provider] {
-		return nil, fmt.Errorf("config: invalid provider %q (use: deepseek, openai, anthropic)", cfg.Provider)
+		return nil, fmt.Errorf("config: invalid provider %q (use: anthropic, deepseek, openai, openrouter)", cfg.Provider)
 	}
 	if cfg.APIKey == "" {
 		return nil, fmt.Errorf("config: api_key is required")

@@ -14,3 +14,8 @@ providers:
         patterns:
             - gpt-*-nano*
         default: gpt-5-nano
+    openrouter:
+        prefix: openrouter
+        patterns:
+            - nvidia/*
+        default: nvidia/nemotron-3-super-120b-a12b:free

@@ -19,11 +19,13 @@ func NewProvider(name, apiKey, model string) (Provider, error) {
 		return NewDeepSeek(apiKey, model, ""), nil
 	case "anthropic":
 		return NewAnthropic(apiKey, model, ""), nil
+	case "openrouter":
+		return NewOpenRouter(apiKey, model, ""), nil
 	default:
 		return nil, fmt.Errorf("unknown provider: %s", name)
 	}
 }
 
 func newHTTPClient() *http.Client {
-	return &http.Client{Timeout: 30 * time.Second}
+	return &http.Client{Timeout: 120 * time.Second}
 }

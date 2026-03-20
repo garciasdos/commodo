@@ -7,13 +7,13 @@ func TestLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(cfg.Providers) != 3 {
-		t.Errorf("expected 3 providers, got %d", len(cfg.Providers))
+	if len(cfg.Providers) != 4 {
+		t.Errorf("expected 4 providers, got %d", len(cfg.Providers))
 	}
 }
 
 func TestDefaultModel(t *testing.T) {
-	for _, provider := range []string{"openai", "anthropic", "deepseek"} {
+	for _, provider := range []string{"openai", "anthropic", "deepseek", "openrouter"} {
 		got := DefaultModel(provider)
 		if got == "" {
 			t.Errorf("DefaultModel(%q) returned empty string, expected a default model", provider)
@@ -26,7 +26,7 @@ func TestDefaultModel(t *testing.T) {
 
 func TestValidProviders(t *testing.T) {
 	vp := ValidProviders()
-	for _, name := range []string{"openai", "anthropic", "deepseek"} {
+	for _, name := range []string{"openai", "anthropic", "deepseek", "openrouter"} {
 		if !vp[name] {
 			t.Errorf("expected %q to be valid", name)
 		}
@@ -38,8 +38,8 @@ func TestValidProviders(t *testing.T) {
 
 func TestProviders(t *testing.T) {
 	providers := Providers()
-	if len(providers) != 3 {
-		t.Fatalf("expected 3 providers, got %d", len(providers))
+	if len(providers) != 4 {
+		t.Fatalf("expected 4 providers, got %d", len(providers))
 	}
 	// Sorted alphabetically
 	if providers[0].Name != "anthropic" {

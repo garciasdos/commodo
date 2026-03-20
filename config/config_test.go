@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/garciasdos/commodo/models"
 )
 
 func TestLoadValid(t *testing.T) {
@@ -41,8 +43,9 @@ func TestLoadDefaultModel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Model != "deepseek-chat" {
-		t.Errorf("expected default model deepseek-chat, got %s", cfg.Model)
+	expected := models.DefaultModel("deepseek")
+	if cfg.Model != expected {
+		t.Errorf("expected default model %s, got %s", expected, cfg.Model)
 	}
 }
 

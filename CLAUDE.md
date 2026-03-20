@@ -1,0 +1,45 @@
+# Commodo
+
+CLI tool that generates conventional commit messages from staged git diffs using LLMs.
+
+## Commands
+
+```bash
+go build -o commodo .          # Build
+go test ./... -v -race         # Test (all packages)
+go test ./models/              # Test single package
+go vet ./...                   # Lint
+```
+
+## Architecture
+
+| Package | Purpose |
+|---------|---------|
+| `main.go` | CLI entry point, subcommand routing |
+| `cache/` | Hash-based project summary cache |
+| `config/` | YAML config loading (~/.config/commodo/config.yaml) |
+| `git/` | Git CLI wrapper (diff, commit, rev-parse) |
+| `models/` | Embedded provider defaults from `models-pricing.yaml` |
+| `output/` | Colored terminal output (ANSI) |
+| `prompt/` | LLM prompt construction for commit messages and summaries |
+| `provider/` | LLM API clients: OpenAI, Anthropic, DeepSeek |
+| `setup/` | Interactive configuration wizard |
+| `cmd/update-models/` | Standalone tool to fetch cheapest models from OpenRouter |
+
+## Key patterns
+
+- **Interface-based design**: `Provider` interface for LLMs, `Executor` interface for git (enables mocking)
+- **Composition**: DeepSeek embeds OpenAI to reuse logic
+- **Embedded YAML**: `models-pricing.yaml` is embedded via `//go:embed` — defaults change automatically via the `update-models` workflow
+- **Wrapped errors**: always use `fmt.Errorf("context: %w", err)`
+
+## Testing
+
+- Hand-rolled mocks (no assertion libraries)
+- `t.TempDir()` for file-based tests
+- Tests must **not** hardcode model names from `models-pricing.yaml` — use `models.DefaultModel()` dynamically since defaults are updated automatically by CI
+
+## CI
+
+- **ci.yml**: vet + test + cross-platform build (linux/darwin × amd64/arm64)
+- **update-models.yml**: weekly cron fetches cheapest models from OpenRouter and opens a PR

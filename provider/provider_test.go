@@ -126,6 +126,7 @@ func TestNewProvider(t *testing.T) {
 		{"openai", "openai", false},
 		{"deepseek", "deepseek", false},
 		{"anthropic", "anthropic", false},
+		{"openrouter", "openrouter", false},
 		{"invalid", "fakellm", true},
 	}
 	for _, tt := range tests {
