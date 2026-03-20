@@ -59,3 +59,8 @@ func (g *Git) Commit(message string) (string, error) {
 func (g *Git) RepoRoot() (string, error) {
 	return g.exec.Run("rev-parse", "--show-toplevel")
 }
+
+func (g *Git) SetGlobalAlias(name, command string) error {
+	_, err := g.exec.Run("config", "--global", "alias."+name, "!"+command)
+	return err
+}

@@ -102,3 +102,32 @@ func TestRepoRoot(t *testing.T) {
 		t.Errorf("expected /Users/diego/Code/my-repo, got %s", root)
 	}
 }
+
+func TestSetGlobalAlias(t *testing.T) {
+	mock := &mockExecutor{
+		outputs: map[string]string{
+			"config --global alias.commodo !commodo": "",
+		},
+	}
+	g := New(mock)
+
+	err := g.SetGlobalAlias("commodo", "commodo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestSetGlobalAliasFailure(t *testing.T) {
+	mock := &mockExecutor{
+		outputs: map[string]string{},
+		errors: map[string]error{
+			"config --global alias.commodo !commodo": errors.New("git error"),
+		},
+	}
+	g := New(mock)
+
+	err := g.SetGlobalAlias("commodo", "commodo")
+	if err == nil {
+		t.Fatal("expected error for failed alias creation")
+	}
+}
