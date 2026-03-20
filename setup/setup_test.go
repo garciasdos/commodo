@@ -12,6 +12,10 @@ import (
 
 // models.Providers() returns alphabetically: anthropic(1), deepseek(2), openai(3), openrouter(4)
 
+func keysPath(dir string) string {
+	return filepath.Join(dir, "keys.yaml")
+}
+
 func TestRunSetup(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
@@ -20,7 +24,7 @@ func TestRunSetup(t *testing.T) {
 	input := strings.NewReader("3\nsk-test123\n\n")
 	var out bytes.Buffer
 
-	err := Run(input, &out, configPath)
+	err := Run(input, &out, configPath, keysPath(dir), false, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -51,7 +55,7 @@ func TestRunSetupDeepSeek(t *testing.T) {
 	input := strings.NewReader("2\nsk-deep\n\n")
 	var out bytes.Buffer
 
-	err := Run(input, &out, configPath)
+	err := Run(input, &out, configPath, keysPath(dir), false, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -75,7 +79,7 @@ func TestRunSetupAnthropic(t *testing.T) {
 	input := strings.NewReader("1\nsk-ant\nclaude-haiku-4-5-20251001\n")
 	var out bytes.Buffer
 
-	err := Run(input, &out, configPath)
+	err := Run(input, &out, configPath, keysPath(dir), false, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -98,7 +102,7 @@ func TestRunSetupInvalidProvider(t *testing.T) {
 	input := strings.NewReader("6\n1\nsk-test\n\n")
 	var out bytes.Buffer
 
-	err := Run(input, &out, configPath)
+	err := Run(input, &out, configPath, keysPath(dir), false, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -117,7 +121,7 @@ func TestRunSetupEmptyAPIKey(t *testing.T) {
 	input := strings.NewReader("1\n\nsk-real\n\n")
 	var out bytes.Buffer
 
-	err := Run(input, &out, configPath)
+	err := Run(input, &out, configPath, keysPath(dir), false, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -136,7 +140,7 @@ func TestRunSetupOutputMessages(t *testing.T) {
 	input := strings.NewReader("1\nsk-test\n\n")
 	var out bytes.Buffer
 
-	Run(input, &out, configPath)
+	Run(input, &out, configPath, keysPath(dir), false, false)
 
 	output := out.String()
 	if !strings.Contains(output, "Provider") {
@@ -144,5 +148,58 @@ func TestRunSetupOutputMessages(t *testing.T) {
 	}
 	if !strings.Contains(output, "API key") {
 		t.Error("expected API key prompt in output")
+	}
+}
+
+func TestRunSetupPersistsKey(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	kp := keysPath(dir)
+
+	// First setup: openai with key
+	Run(strings.NewReader("3\nsk-openai-key\n\n"), &bytes.Buffer{}, configPath, kp, false, false)
+
+	// Second setup: switch to anthropic
+	Run(strings.NewReader("1\nsk-ant-key\n\n"), &bytes.Buffer{}, configPath, kp, false, false)
+
+	// Third setup: switch back to openai, press enter to reuse saved key
+	var out bytes.Buffer
+	Run(strings.NewReader("3\n\n\n"), &out, configPath, kp, false, false)
+
+	data, _ := os.ReadFile(configPath)
+	if !strings.Contains(string(data), "api_key: sk-openai-key") {
+		t.Errorf("expected saved openai key to be reused, got:\n%s", string(data))
+	}
+	// Prompt should show masked key
+	if !strings.Contains(out.String(), "sk-o***") {
+		t.Errorf("expected masked key in prompt, got:\n%s", out.String())
+	}
+}
+
+func TestRunSetupModelOnly(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	kp := keysPath(dir)
+
+	// Initial setup
+	Run(strings.NewReader("3\nsk-openai-key\n\n"), &bytes.Buffer{}, configPath, kp, false, false)
+
+	// Model-only update
+	var out bytes.Buffer
+	err := Run(strings.NewReader("my-custom-model\n"), &out, configPath, kp, true, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, _ := os.ReadFile(configPath)
+	content := string(data)
+	if !strings.Contains(content, "model: my-custom-model") {
+		t.Errorf("expected model updated, got:\n%s", content)
+	}
+	if !strings.Contains(content, "provider: openai") {
+		t.Errorf("expected provider preserved, got:\n%s", content)
+	}
+	if !strings.Contains(content, "api_key: sk-openai-key") {
+		t.Errorf("expected api_key preserved, got:\n%s", content)
 	}
 }

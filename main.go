@@ -20,7 +20,8 @@ func main() {
 	// Handle subcommands before flag parsing
 	if len(os.Args) > 1 && os.Args[1] == "setup" {
 		out := output.New(os.Stderr)
-		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath()); err != nil {
+		modelOnly := len(os.Args) > 2 && os.Args[2] == "--model"
+		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath(), config.KeysPath(), modelOnly, false); err != nil {
 			out.Error(err.Error())
 			os.Exit(1)
 		}
