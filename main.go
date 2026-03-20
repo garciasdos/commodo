@@ -24,6 +24,14 @@ func main() {
 			out.Error(err.Error())
 			os.Exit(1)
 		}
+		// Create git alias so "git commodo" works
+		g := git.NewShell()
+		if err := g.SetGlobalAlias("commodo", "commodo"); err != nil {
+			out.Warn("Could not create git alias: " + err.Error())
+			out.Secondary("You can still run commodo directly.")
+		} else {
+			out.Success("Git alias created — you can now use \"git commodo\"")
+		}
 		out.Success("Setup complete! Run commodo in a git repo with staged changes.")
 		return
 	}
