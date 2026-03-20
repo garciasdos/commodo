@@ -51,3 +51,10 @@ go vet ./...                   # Lint
 
 - **ci.yml**: vet + test + cross-platform build (linux/darwin × amd64/arm64)
 - **update-models.yml**: weekly cron fetches cheapest models from OpenRouter and opens a PR
+
+## Releasing
+
+- Create a release in the GitHub UI with a `v`-prefixed semver tag (e.g. `v1.0.0`)
+- `release.yml` runs tests, then GoReleaser cross-compiles, uploads binaries + checksums, and pushes the Homebrew formula to `garciasdos/homebrew-tap`
+- Users install via `brew install garciasdos/tap/commodo`
+- `HOMEBREW_TAP_TOKEN` secret (fine-grained PAT scoped to the tap repo) must be configured in repo settings
