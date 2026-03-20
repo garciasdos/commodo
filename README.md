@@ -16,7 +16,7 @@ Run the interactive setup to configure your LLM provider:
 commodo setup
 ```
 
-This creates `~/.config/commodo/config.yaml` with your provider, API key, and model. API keys are saved per-provider in `~/.config/commodo/keys.yaml` — when you switch providers and come back, your key is pre-filled.
+This creates `~/.commodo/config.yaml` with your provider and model. API keys are encrypted with [age](https://age-encryption.org/) and saved per-provider in `~/.commodo/keys.yaml.age` — when you switch providers and come back, your key is pre-filled.
 
 To change only the model without re-entering your provider and API key:
 
@@ -32,13 +32,15 @@ commodo setup --free
 
 This skips provider and model selection and configures OpenRouter with its free default model.
 
-You can also create the config manually:
+You can also create the config file manually:
 
+`~/.commodo/config.yaml`:
 ```yaml
 provider: openrouter
-api_key: sk-or-your-key-here
 model: nvidia/nemotron-3-super-120b-a12b:free
 ```
+
+API keys are managed via `commodo setup` — they are age-encrypted and cannot be manually edited.
 
 ## Usage
 
