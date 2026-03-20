@@ -1,3 +1,7 @@
+<img width="1318" height="490" alt="carbon" src="https://github.com/user-attachments/assets/13b0cd1a-474b-43f4-97e6-42cb57d38115" />
+
+---
+
 # commodo
 
 Generate conventional commit messages from staged git diffs using an LLM.
