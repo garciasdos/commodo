@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/garciasdos/commodo/config"
 	"github.com/garciasdos/commodo/models"
 )
 
@@ -201,5 +202,87 @@ func TestRunSetupModelOnly(t *testing.T) {
 	}
 	if !strings.Contains(content, "api_key: sk-openai-key") {
 		t.Errorf("expected api_key preserved, got:\n%s", content)
+	}
+}
+
+func TestRunSetupFreeMode(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	kp := keysPath(dir)
+
+	// Free mode: only prompts for API key; provider and model are pre-set
+	input := strings.NewReader("sk-or-freekey\n")
+	var out bytes.Buffer
+
+	err := Run(input, &out, configPath, kp, false, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("config file not created: %v", err)
+	}
+	content := string(data)
+
+	if !strings.Contains(content, "provider: openrouter") {
+		t.Errorf("expected provider openrouter, got:\n%s", content)
+	}
+	if !strings.Contains(content, "api_key: sk-or-freekey") {
+		t.Errorf("expected api_key sk-or-freekey, got:\n%s", content)
+	}
+	expectedModel := models.DefaultModel("openrouter")
+	if !strings.Contains(content, "model: "+expectedModel) {
+		t.Errorf("expected default openrouter model %s, got:\n%s", expectedModel, content)
+	}
+}
+
+func TestRunSetupFreeModeUseSavedKey(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	kp := keysPath(dir)
+
+	// Pre-seed the openrouter key directly
+	if err := config.SaveKeys(kp, map[string]string{"openrouter": "sk-or-saved"}); err != nil {
+		t.Fatalf("failed to seed keys: %v", err)
+	}
+
+	// Free mode: press enter to reuse saved key
+	var out bytes.Buffer
+	err := Run(strings.NewReader("\n"), &out, configPath, kp, false, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, _ := os.ReadFile(configPath)
+	if !strings.Contains(string(data), "api_key: sk-or-saved") {
+		t.Errorf("expected saved openrouter key reused, got:\n%s", string(data))
+	}
+	// Prompt should show masked key
+	if !strings.Contains(out.String(), "sk-o***") {
+		t.Errorf("expected masked key in output, got:\n%s", out.String())
+	}
+}
+
+func TestRunSetupFreeModeNoProviderPrompt(t *testing.T) {
+	dir := t.TempDir()
+	configPath := filepath.Join(dir, "config.yaml")
+	kp := keysPath(dir)
+
+	// Input has only an API key — no provider number
+	input := strings.NewReader("sk-or-test\n")
+	var out bytes.Buffer
+
+	err := Run(input, &out, configPath, kp, false, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := out.String()
+	if strings.Contains(output, "Provider:") {
+		t.Error("free mode should not show provider prompt")
+	}
+	if strings.Contains(output, "Model [") {
+		t.Error("free mode should not show model prompt")
 	}
 }

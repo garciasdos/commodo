@@ -20,8 +20,16 @@ func main() {
 	// Handle subcommands before flag parsing
 	if len(os.Args) > 1 && os.Args[1] == "setup" {
 		out := output.New(os.Stderr)
-		modelOnly := len(os.Args) > 2 && os.Args[2] == "--model"
-		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath(), config.KeysPath(), modelOnly, false); err != nil {
+		var modelOnly, freeMode bool
+		for _, arg := range os.Args[2:] {
+			switch arg {
+			case "--model":
+				modelOnly = true
+			case "--free":
+				freeMode = true
+			}
+		}
+		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath(), config.KeysPath(), modelOnly, freeMode); err != nil {
 			out.Error(err.Error())
 			os.Exit(1)
 		}
