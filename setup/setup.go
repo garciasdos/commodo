@@ -23,9 +23,12 @@ func maskKey(key string) string {
 // keysPath is the path to the persistent per-provider keys store.
 // modelOnly skips provider and API key steps, updating only the model.
 // freeMode skips provider and model prompts, configuring OpenRouter with its free default.
-func Run(in io.Reader, out io.Writer, configPath, keysPath string, modelOnly, freeMode bool) error {
+func Run(in io.Reader, out io.Writer, configPath, keysPath, ageKeyPath string, modelOnly, freeMode bool) error {
 	scanner := bufio.NewScanner(in)
-	keys := config.LoadKeys(keysPath)
+	keys, err := config.LoadKeys(keysPath, ageKeyPath)
+	if err != nil {
+		return fmt.Errorf("cannot load keys: %w", err)
+	}
 
 	var providerName, apiKey, defaultModel string
 
@@ -33,13 +36,12 @@ func Run(in io.Reader, out io.Writer, configPath, keysPath string, modelOnly, fr
 		providerName = "openrouter"
 		defaultModel = models.DefaultModel("openrouter")
 	} else if modelOnly {
-		// Load existing config to get current provider and key
+		// Load existing config to get current provider
 		cfg, err := config.LoadFrom(configPath)
 		if err != nil {
 			return fmt.Errorf("cannot load existing config (run commodo setup first): %w", err)
 		}
 		providerName = cfg.Provider
-		apiKey = cfg.APIKey
 		defaultModel = models.DefaultModel(providerName)
 		if cfg.Model != "" {
 			defaultModel = cfg.Model
@@ -103,8 +105,11 @@ func Run(in io.Reader, out io.Writer, configPath, keysPath string, modelOnly, fr
 
 		// Persist the key for this provider
 		keys[providerName] = apiKey
-		if err := os.MkdirAll(filepath.Dir(keysPath), 0755); err == nil {
-			config.SaveKeys(keysPath, keys)
+		if err := os.MkdirAll(filepath.Dir(keysPath), 0755); err != nil {
+			return fmt.Errorf("cannot create keys directory: %w", err)
+		}
+		if err := config.SaveKeys(keysPath, ageKeyPath, keys); err != nil {
+			return fmt.Errorf("cannot save keys: %w", err)
 		}
 	}
 
@@ -125,7 +130,7 @@ func Run(in io.Reader, out io.Writer, configPath, keysPath string, modelOnly, fr
 		return fmt.Errorf("cannot create config directory: %w", err)
 	}
 
-	content := fmt.Sprintf("provider: %s\napi_key: %s\nmodel: %s\n", providerName, apiKey, model)
+	content := fmt.Sprintf("provider: %s\nmodel: %s\n", providerName, model)
 	if err := os.WriteFile(configPath, []byte(content), 0600); err != nil {
 		return fmt.Errorf("cannot write config: %w", err)
 	}
