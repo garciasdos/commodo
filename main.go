@@ -11,11 +11,23 @@ import (
 	"github.com/dgarcia/commodo/git"
 	"github.com/dgarcia/commodo/output"
 	"github.com/dgarcia/commodo/provider"
+	"github.com/dgarcia/commodo/setup"
 )
 
 var version = "dev"
 
 func main() {
+	// Handle subcommands before flag parsing
+	if len(os.Args) > 1 && os.Args[1] == "setup" {
+		out := output.New(os.Stderr)
+		if err := setup.Run(os.Stdin, os.Stderr, config.DefaultPath()); err != nil {
+			out.Error(err.Error())
+			os.Exit(1)
+		}
+		out.Success("Setup complete! Run commodo in a git repo with staged changes.")
+		return
+	}
+
 	dryRun := flag.Bool("dry-run", false, "print generated message without committing")
 	flag.BoolVar(dryRun, "d", false, "print generated message without committing")
 	showVersion := flag.Bool("version", false, "print version")
@@ -33,7 +45,7 @@ func main() {
 	cfg, err := config.LoadFrom(config.DefaultPath())
 	if err != nil {
 		out.Error(err.Error())
-		out.Secondary("Run: mkdir -p ~/.config/commodo && cat > ~/.config/commodo/config.yaml")
+		out.Secondary("Run: commodo setup")
 		os.Exit(1)
 	}
 
