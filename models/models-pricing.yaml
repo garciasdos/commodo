@@ -1,0 +1,16 @@
+providers:
+  openai:
+    prefix: "openai"
+    patterns:
+      - "gpt-*-mini*"
+    default: gpt-4o-mini
+  anthropic:
+    prefix: "anthropic"
+    patterns:
+      - "claude-*-haiku-*"
+    default: claude-haiku-4-5-20251001
+  deepseek:
+    prefix: "deepseek"
+    patterns:
+      - "deepseek-chat*"
+    default: deepseek-chat

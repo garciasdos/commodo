@@ -5,20 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/garciasdos/commodo/models"
 	"gopkg.in/yaml.v3"
 )
-
-var defaultModels = map[string]string{
-	"deepseek":  "deepseek-chat",
-	"openai":    "gpt-4o-mini",
-	"anthropic": "claude-sonnet-4-6-20250514",
-}
-
-var validProviders = map[string]bool{
-	"deepseek":  true,
-	"openai":    true,
-	"anthropic": true,
-}
 
 type Config struct {
 	Provider string `yaml:"provider"`
@@ -45,14 +34,14 @@ func LoadFrom(path string) (*Config, error) {
 	if cfg.Provider == "" {
 		return nil, fmt.Errorf("config: provider is required")
 	}
-	if !validProviders[cfg.Provider] {
+	if !models.ValidProviders()[cfg.Provider] {
 		return nil, fmt.Errorf("config: invalid provider %q (use: deepseek, openai, anthropic)", cfg.Provider)
 	}
 	if cfg.APIKey == "" {
 		return nil, fmt.Errorf("config: api_key is required")
 	}
 	if cfg.Model == "" {
-		cfg.Model = defaultModels[cfg.Provider]
+		cfg.Model = models.DefaultModel(cfg.Provider)
 	}
 
 	return &cfg, nil

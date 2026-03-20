@@ -7,45 +7,41 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-var providers = []struct {
-	name         string
-	defaultModel string
-}{
-	{"openai", "gpt-4o-mini"},
-	{"deepseek", "deepseek-chat"},
-	{"anthropic", "claude-sonnet-4-6-20250514"},
-}
+	"github.com/garciasdos/commodo/models"
+)
 
 func Run(in io.Reader, out io.Writer, configPath string) error {
 	scanner := bufio.NewScanner(in)
+	providers := models.Providers()
 
 	// Provider selection
 	var providerName, defaultModel string
 	for {
 		fmt.Fprintln(out, "\n  Provider:")
 		for i, p := range providers {
-			fmt.Fprintf(out, "    %d. %s\n", i+1, p.name)
+			fmt.Fprintf(out, "    %d. %s\n", i+1, p.Name)
 		}
-		fmt.Fprint(out, "\n  Choose [1-3]: ")
+		fmt.Fprintf(out, "\n  Choose [1-%d]: ", len(providers))
 
 		if !scanner.Scan() {
 			return fmt.Errorf("unexpected end of input")
 		}
 		choice := strings.TrimSpace(scanner.Text())
 
-		switch choice {
-		case "1":
-			providerName, defaultModel = providers[0].name, providers[0].defaultModel
-		case "2":
-			providerName, defaultModel = providers[1].name, providers[1].defaultModel
-		case "3":
-			providerName, defaultModel = providers[2].name, providers[2].defaultModel
-		default:
+		idx := -1
+		for i := range providers {
+			if choice == fmt.Sprintf("%d", i+1) {
+				idx = i
+				break
+			}
+		}
+		if idx < 0 {
 			fmt.Fprintf(out, "  Invalid choice: %s\n", choice)
 			continue
 		}
+		providerName = providers[idx].Name
+		defaultModel = providers[idx].DefaultModel
 		break
 	}
 

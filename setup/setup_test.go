@@ -8,12 +8,14 @@ import (
 	"testing"
 )
 
+// models.Providers() returns alphabetically: anthropic(1), deepseek(2), openai(3)
+
 func TestRunSetup(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
-	// Simulate user input: provider=openai, api_key=sk-test123, model=(default)
-	input := strings.NewReader("1\nsk-test123\n\n")
+	// Choose openai (3rd alphabetically), api_key, default model
+	input := strings.NewReader("3\nsk-test123\n\n")
 	var out bytes.Buffer
 
 	err := Run(input, &out, configPath)
@@ -21,7 +23,6 @@ func TestRunSetup(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Check config file was created
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		t.Fatalf("config file not created: %v", err)
@@ -43,6 +44,7 @@ func TestRunSetupDeepSeek(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
+	// deepseek is 2nd alphabetically
 	input := strings.NewReader("2\nsk-deep\n\n")
 	var out bytes.Buffer
 
@@ -65,7 +67,8 @@ func TestRunSetupAnthropic(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
-	input := strings.NewReader("3\nsk-ant\nclaude-haiku-4-5-20251001\n")
+	// anthropic is 1st alphabetically
+	input := strings.NewReader("1\nsk-ant\nclaude-haiku-4-5-20251001\n")
 	var out bytes.Buffer
 
 	err := Run(input, &out, configPath)
@@ -87,7 +90,7 @@ func TestRunSetupInvalidProvider(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
-	// Invalid choice "5", then valid "1"
+	// Invalid choice "5", then valid "1" (anthropic)
 	input := strings.NewReader("5\n1\nsk-test\n\n")
 	var out bytes.Buffer
 
@@ -97,8 +100,8 @@ func TestRunSetupInvalidProvider(t *testing.T) {
 	}
 
 	data, _ := os.ReadFile(configPath)
-	if !strings.Contains(string(data), "provider: openai") {
-		t.Errorf("expected provider openai after retry, got:\n%s", string(data))
+	if !strings.Contains(string(data), "provider: anthropic") {
+		t.Errorf("expected provider anthropic after retry, got:\n%s", string(data))
 	}
 }
 
@@ -106,7 +109,7 @@ func TestRunSetupEmptyAPIKey(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
-	// Empty API key, then valid one
+	// Empty API key, then valid one; choice 1 = anthropic
 	input := strings.NewReader("1\n\nsk-real\n\n")
 	var out bytes.Buffer
 
@@ -125,6 +128,7 @@ func TestRunSetupOutputMessages(t *testing.T) {
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "config.yaml")
 
+	// choice 1 = anthropic
 	input := strings.NewReader("1\nsk-test\n\n")
 	var out bytes.Buffer
 
