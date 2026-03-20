@@ -16,14 +16,28 @@ Run the interactive setup to configure your LLM provider:
 commodo setup
 ```
 
-This creates `~/.config/commodo/config.yaml` with your provider, API key, and model.
+This creates `~/.config/commodo/config.yaml` with your provider, API key, and model. API keys are saved per-provider in `~/.config/commodo/keys.yaml` — when you switch providers and come back, your key is pre-filled.
+
+To change only the model without re-entering your provider and API key:
+
+```bash
+commodo setup --model
+```
+
+To get started instantly with a free model (no cost, just an OpenRouter API key):
+
+```bash
+commodo setup --free
+```
+
+This skips provider and model selection and configures OpenRouter with its free default model.
 
 You can also create the config manually:
 
 ```yaml
-provider: openai
-api_key: sk-your-key-here
-model: gpt-4o-mini
+provider: openrouter
+api_key: sk-or-your-key-here
+model: nvidia/nemotron-3-super-120b-a12b:free
 ```
 
 ## Usage
@@ -49,11 +63,14 @@ commodo --version
 
 ## Providers
 
-| Provider  | Default Model              |
-|-----------|----------------------------|
-| openai    | gpt-4o-mini                |
-| deepseek  | deepseek-chat              |
-| anthropic | claude-sonnet-4-6-20250514 |
+| Provider   | Default Model                             | Notes       |
+|------------|-------------------------------------------|-------------|
+| openrouter | nvidia/nemotron-3-super-120b-a12b:free    | Free tier   |
+| openai     | gpt-5-nano                                |             |
+| deepseek   | deepseek-chat-v3.1                        |             |
+| anthropic  | claude-haiku-4-5-20251001                 |             |
+
+Default models are updated automatically each week via the `update-models` workflow.
 
 ## How it works
 
