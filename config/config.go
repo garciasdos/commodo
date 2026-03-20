@@ -17,32 +17,87 @@ type Config struct {
 
 func DefaultPath() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "commodo", "config.yaml")
+	return filepath.Join(home, ".commodo", "config.yaml")
 }
 
 func KeysPath() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "commodo", "keys.yaml")
+	return filepath.Join(home, ".commodo", "keys.yaml.age")
 }
 
-func LoadKeys(path string) map[string]string {
+func AgeKeyPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".commodo", "age-key.txt")
+}
+
+// LoadKeys reads and decrypts the per-provider keys file.
+// Returns empty map + nil error if the file does not exist (no keys saved yet).
+// Returns an error if the file exists but cannot be decrypted.
+func LoadKeys(path, ageKeyPath string) (map[string]string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return map[string]string{}
+		return map[string]string{}, nil
 	}
+
+	identity, err := loadAgeKey(ageKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot load age key for decryption: %w", err)
+	}
+
+	plaintext, err := decryptKeys(data, identity)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decrypt keys file: %w", err)
+	}
+
 	keys := map[string]string{}
-	yaml.Unmarshal(data, &keys)
-	return keys
+	if err := yaml.Unmarshal(plaintext, &keys); err != nil {
+		return nil, fmt.Errorf("cannot parse decrypted keys: %w", err)
+	}
+	return keys, nil
 }
 
-func SaveKeys(path string, keys map[string]string) error {
-	data, err := yaml.Marshal(keys)
+// SaveKeys encrypts and writes the per-provider keys file.
+func SaveKeys(path, ageKeyPath string, keys map[string]string) error {
+	plaintext, err := yaml.Marshal(keys)
 	if err != nil {
 		return fmt.Errorf("cannot marshal keys: %w", err)
 	}
-	return os.WriteFile(path, data, 0600)
+
+	identity, err := ensureAgeKey(ageKeyPath)
+	if err != nil {
+		return fmt.Errorf("cannot load age key for encryption: %w", err)
+	}
+
+	ciphertext, err := encryptKeys(plaintext, identity)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, ciphertext, 0600)
 }
 
+// Load reads config.yaml and resolves the API key from the encrypted keys file.
+func Load(configPath, keysPath, ageKeyPath string) (*Config, error) {
+	cfg, err := LoadFrom(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.APIKey == "" {
+		keys, err := LoadKeys(keysPath, ageKeyPath)
+		if err != nil {
+			return nil, err
+		}
+		cfg.APIKey = keys[cfg.Provider]
+	}
+	if cfg.APIKey == "" {
+		return nil, fmt.Errorf("config: api_key not found (run commodo setup)")
+	}
+
+	return cfg, nil
+}
+
+// LoadFrom reads a config file. API key may be empty if stored in keys file.
 func LoadFrom(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -59,9 +114,6 @@ func LoadFrom(path string) (*Config, error) {
 	}
 	if !models.ValidProviders()[cfg.Provider] {
 		return nil, fmt.Errorf("config: invalid provider %q (use: anthropic, deepseek, openai, openrouter)", cfg.Provider)
-	}
-	if cfg.APIKey == "" {
-		return nil, fmt.Errorf("config: api_key is required")
 	}
 	if cfg.Model == "" {
 		cfg.Model = models.DefaultModel(cfg.Provider)
